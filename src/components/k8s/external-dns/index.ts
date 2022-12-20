@@ -12,6 +12,7 @@ export type ZonePolicy = 'sync' | 'upsert-only'
 
 export interface ExternalDnsArgs {
   domain: pulumi.Input<string>
+  repository?: pulumi.Input<string>
   labels: pulumi.Input<Record<string, pulumi.Input<string>>>
   namespace?: string
   version?: string
@@ -42,6 +43,7 @@ export class ExternalDNS extends pulumi.ComponentResource {
     const serviceAccountName = args.serviceAccountName ?? `${name}-sa`
     const version = args.version ?? '6.5.1'
     const imageTag = args.imageTag ?? '0.12.0'
+    const repo = args.repository ?? 'https://charts.bitnami.com/bitnami'
 
     const namespace = new k8s.core.v1.Namespace(`${name}-namespace`, {
       metadata: {
@@ -83,9 +85,9 @@ export class ExternalDNS extends pulumi.ComponentResource {
       { parent: this },
     )
 
-    const _chart = new k8s.helm.v2.Chart(name, {
+    const _chart = new k8s.helm.v3.Chart(name, {
       fetchOpts: {
-        repo: 'https://charts.bitnami.com/bitnami',
+        repo,
       },
       version,
       chart: 'external-dns',
